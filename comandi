@@ -2,4 +2,5 @@ creazione ambiente virtuale : virtualenv nome
 attivare jupyter : jupyter-lab
 creare requirements file : pip3 freeze > requirements.txt
 installare pacchetti .deb : sudo dpkg -i nome-pacchetto
+google key : AIzaSyB4DZr6aJgeozi5L-BcGVqb26Cd-Jyeg8M
 
