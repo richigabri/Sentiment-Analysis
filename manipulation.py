@@ -1,8 +1,9 @@
 import nltk
-#from nltk.corpus import stopword
+nltk.download('stopwords')
+from nltk.corpus import stopwords
 
 def remove_stopword(text,namefile):
-    nltk.download('stopwords')
+    
     text_tokens = text.split()
     tokens_without_sw = [word for word in text_tokens if not word in stopwords.words()]
 

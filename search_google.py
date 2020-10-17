@@ -18,10 +18,10 @@ def found_link(query):
                ):
                 my_results_list.append(i)
                 print(i)
-    open_url()
+    open_url(query)
     return ("finitoooo")
     
-def open_url():
+def open_url(query):
     i=0
     for results in my_results_list:
         url = results
@@ -47,15 +47,22 @@ def open_url():
         #all in lower case
         text=text.lower()
         namefile = "files/file"+str(i)+".txt"
-        print(url+"\n")
+        
         
         text_without_stopword = manipulation.remove_stopword(text,namefile)
-        totale_parole = len(filtered_sentence.split())
-        totale_key = filtered_sentence.count("assiteca")
-        print("numero di parole:",totale_parole+"\n")
-        print("numero di occorenze:",totale_key+"\n")
+        print("###########################################################")
+        print("\n"+url+"\n")
+        #valutazione della presenza delle parole chiave
+        keys =query.split()
+        
+        totale_parole = len(text_without_stopword.split())
+        print("numero di parole:",totale_parole,"\n")
+        for i in range (len(keys)):
+            totale_key = text_without_stopword.count(keys[i])
+            
+            print("numero di occorenze per "+keys[i]+":",totale_key)
 
-        print("percentuale:",(totale_key / totale_parole)*100+"\n")
+            print("percentuale:",(totale_key / totale_parole)*100)
         
         #file = open("files/file"+str(i)+".txt","w")
         #file.write(text)
