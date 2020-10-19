@@ -14,6 +14,7 @@ def remove_stopword(text,namefile):
     #print(filtered_sentence)
     file = open(namefile,"w")
     file.write(filtered_sentence)
+    print("file: "+namefile+" creato")
     file.close()
     return filtered_sentence
     
