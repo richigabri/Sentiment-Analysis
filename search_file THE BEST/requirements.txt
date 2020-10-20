@@ -1,0 +1,5 @@
+beautifulsoup4==4.9.3
+fake-useragent==0.1.11
+soupsieve==2.0.1
+urllib3==1.25.11
+urllib5==5.0.0
