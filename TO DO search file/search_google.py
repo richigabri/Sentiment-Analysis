@@ -37,7 +37,7 @@ def open_url(query):
             script.extract()    # rip it out
 
         # get text
-        '''
+        
         text = soup.get_text()
         '''
 
@@ -56,17 +56,19 @@ def open_url(query):
             'input',
             'script',
             'style'
-            '''
+            
             'p',
             'li',
             'src'
-            '''
+            
+            
             # there may be more elements you don't want, such as "style", etc.
         ]
 
         for t in text1:
             if t.parent.name not in blacklist:
                 text += '{} '.format(t)
+                '''
 ##############################
 
         # break into lines and remove leading and trailing space on each
@@ -77,6 +79,7 @@ def open_url(query):
         text = '\n'.join(chunk for chunk in chunks if chunk)
         #all in lower case
         text=text.lower()
+        
         i=i+1
         print(i)
         namefile = "files/file"+str(i)+".txt"
