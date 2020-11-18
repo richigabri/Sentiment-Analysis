@@ -1,38 +1,63 @@
-
 import urllib
 from urllib.parse import urlencode
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 import time
+from datetime import date
+import sys
+
+
+def print_data(name,link,description,text):
+    print("TITOLO:\n "+name)
+    print("LINK:\n ",link)
+    print("DESCRIZIONE:\n "+description)
+    print("TEST:\n " +title)
+
+class Text():
+    def __init__(self, title, link,description,text):
+        self.title = title
+        self.link = link
+        self.description =description
+        self.text = text
+
+    def __str__(self):
+        return "TITLE: "+self.title +"\n"+"LINK: "+ self.link+"\n"+"DESCRIZIONE: " +self.description +"\n"+"TEXT: " +str(self.text)
 
 
 
-def _get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr=False, time_period=False, sort_by_date=False):
-    # il numero di pagine non funziona
+def get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr =False,time_period=True, sort_by_date=True):
 
     params = {
-        'nl': lang,
-        'q': query.encode('utf8'),
-        'start': page * per_page,
-        'num': per_page
-    }
+            'nl': lang,
+            'q': query.encode('utf8'),
+            'start': page * per_page,
+            'num': per_page
+        }
 
+    # data di inizio(cd_min) e data di fine(cd_max) per la ricerca
+    #tbs: cdr:1,cd_min:<m/d/yyyy>,cd_max:<m/d/yyyy>
+    cd_min = '3/2/1984'
+    cd_max = date.today().strftime("%d/%m/%Y")
+
+    time_mapping = 'cd_min:'+ cd_min+','+'cd_max:'+cd_max
+
+    '''
     time_mapping = {
-        'hour': 'qdr:h',
-        'week': 'qdr:w',
-        'month': 'qdr:m',
-        'year': 'qdr:2020'
-    }
+        'cd_min' :'3/2/1984',
+        'cd_max' : date.today().strftime("%d/%m/%Y")
 
+        }
+    '''
 
     tbs_param = []
-    # Settare la data
-    if time_period and time_period in time_mapping:
-        tbs_param.append(time_mapping[time_period])
+
+    if time_period:
+        tbs_param.append('cdr:1,'+time_mapping)
+
 
     if sort_by_date:
         tbs_param.append('sbd:1')
-    params['tbs'] = ','.join(tbs_param)
+        params['tbs'] = ','.join(tbs_param)
 
     # No Country Redirect
     if ncr:
@@ -41,23 +66,21 @@ def _get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr=False
         params['gws_rd'] = 'cr' # Google Web Server ReDirect: CountRy.
 
     params = urlencode(params)
-
     url = u"https://www.google.com/search?" + params
 
-
-    # what I found useful.
     https = int(time.time()) % 2 == 0
     bare_url = u"https://www.google.com/search?" if https else u"http://www.google.com/search?"
     url = bare_url + params
 
     if not ncr:
+
         if area == 'com':
             url = u"http://www.google.com/search?"
 
         elif area == 'it':
             url = 'http://www.google.dk/search?'
         else:
-            raise AreaError('invalid  name,  no area found')
+            print('invalid  name,  no area found')
         url += params
     return url
 
@@ -85,7 +108,7 @@ def get_html(url):
         print(e)
         return None
 
-def _get_name(li):
+def _get_title(li):
     """Return il nome del della pagina."""
 
     a = li.find('span')
@@ -119,63 +142,58 @@ def _get_description(li):
     else:
         return None
 
-def  read_link(link):
+def _get_text(link):
+    str = ''
     try:
-        soup = BeautifulSoup( urllib.request.urlopen(link).read())
+        soup = BeautifulSoup(urllib.request.urlopen(link).read(),features="lxml")
         divs =soup.find_all("p")
         for div in divs:
             #print(div)
+            #SUPPOSIZIONE -> le righe con meno di 50 caratteri non contengono nulla
             if len(div.text.strip()) > 50:
-                print(div.text.strip())
-                print()
+                str= str + div.text.strip()
+        return str
     except:
-        return
+        return ' '
 
-def search(query, pages=1, lang='en', area='com', ncr=False, void=True, time_period=False, sort_by_date=False, first_page=0):
-    """
-        query: String to search in google.
-        pages: Number of pages where results must be taken.
-        area : Area of google homepages.
-        first_page : First page.
-    """
+soup = BeautifulSoup(urllib.request.urlopen('https://www.cdt.ch/economia/ticino/inaugurati-gli-uffici-di-lugano-di-assiteca-GH1786549?_sid=1EPScBEP').read()
 
+def search(query,pages=1, lang='en', area='com', ncr=False, void=True, time_period=True, sort_by_date=True, first_page=0):
+    """
+    query = keyword
+    pages = numero di pagine da analizzare
+    lang = area di google dove cercare es .com .it
+
+    """
     results = []
-    num_results =0
-    for i in range(first_page, first_page + pages):
-
-        url = _get_search_url(query, i, lang=lang, area=area, ncr=ncr, time_period=time_period, sort_by_date=sort_by_date)
-        print(url)
+    for i in range(first_page + first_page+pages):
+        url = get_search_url (query, i,lang=lang, area=area, ncr=ncr, time_period=time_period, sort_by_date=sort_by_date)
+        #print(url)
         html = get_html(url)
-        #print(html)
 
         if html:
             soup = BeautifulSoup(html, "html.parser")
             divs = soup.findAll("div", attrs={"class": "g"})
 
-            j = 0
+
+
             for li in divs:
 
-                name = _get_name(li)
+                title = _get_title(li)
 
                 link = _get_link(li)
 
                 description = _get_description(li)
 
+                text = _get_text(link)
+
                 if void is True:
                     if description is None:
                         continue
-                num_results += 1
-                #print("\n"+"##########################\t",num_results,"\n")
-                #print("TITOLO: "+name)
-                #print("LINK: "+link)
-                #print("DESCRIZIONE: "+description)
-                #read_link(link)
-                #results.append(res)
-                #print(results.append(res))
+                # aggiungo i file trovati in un lista TEXT
+                results.append(Text(title,link,description,text))
 
-    #print("\n"+"*******************************")
-    #print("SONO STATI TROVATI ",num_results," RISULTATI")
-    #print("*******************************")
+                #per stampare in fase di debug
+                #print_data(name,link,description,text)
+
     return results
-num_pag=3
-search("pizza",num_pag)
