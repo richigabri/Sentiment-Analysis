@@ -25,6 +25,7 @@ class Text():
 
 
 
+
 def get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr =False,time_period=True, sort_by_date=True):
 
     params = {
@@ -145,7 +146,12 @@ def _get_description(li):
 def _get_text(link):
     str = ''
     try:
-        soup = BeautifulSoup(urllib.request.urlopen(link).read(),features="lxml")
+        #soup = BeautifulSoup(urllib.request.urlopen(link).read(),features="lxml")
+        user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
+        headers={'User-Agent':user_agent,}
+
+        request=urllib.request.Request(link,None,headers)
+        soup = BeautifulSoup(urllib.request.urlopen(request).read(),features="html.parser")
         divs =soup.find_all("p")
         for div in divs:
             #print(div)
@@ -156,7 +162,6 @@ def _get_text(link):
     except:
         return ' '
 
-soup = BeautifulSoup(urllib.request.urlopen('https://www.cdt.ch/economia/ticino/inaugurati-gli-uffici-di-lugano-di-assiteca-GH1786549?_sid=1EPScBEP').read()
 
 def search(query,pages=1, lang='en', area='com', ncr=False, void=True, time_period=True, sort_by_date=True, first_page=0):
     """
