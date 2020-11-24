@@ -6,13 +6,14 @@ import time
 from datetime import date
 import sys
 
-
+#stampare i campi singolarmente
 def print_data(name,link,description,text):
     print("TITOLO:\n "+name)
     print("LINK:\n ",link)
     print("DESCRIZIONE:\n "+description)
     print("TEST:\n " +title)
 
+#storage dei campi trovati
 class Text():
     def __init__(self, title, link,description,text):
         self.title = title
@@ -23,22 +24,22 @@ class Text():
     def __str__(self):
         return "TITLE: "+self.title +"\n"+"LINK: "+ self.link+"\n"+"DESCRIZIONE: " +self.description +"\n"+"TEXT: " +str(self.text)
 
-
-
-
-def get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr =False,time_period=True, sort_by_date=True):
+#compongo url per google con i vari parametri
+def get_search_url(query,start_date,end_date, page=0, per_page=10, lang='en', area='com', ncr =False,time_period=True, sort_by_date=True):
+    '''Return url'''
 
     params = {
-            'nl': lang,
-            'q': query.encode('utf8'),
-            'start': page * per_page,
-            'num': per_page
+            'nl': lang,                 #lingua
+            'q': query.encode('utf8'),  #query in utf-8
+            'start': page * per_page,   #pagina di Inizio
+            'num': per_page             #numero di pagine
         }
 
     # data di inizio(cd_min) e data di fine(cd_max) per la ricerca
     #tbs: cdr:1,cd_min:<m/d/yyyy>,cd_max:<m/d/yyyy>
-    cd_min = '3/2/1984'
-    cd_max = date.today().strftime("%d/%m/%Y")
+
+    cd_min = start_date
+    cd_max = end_date
 
     time_mapping = 'cd_min:'+ cd_min+','+'cd_max:'+cd_max
 
@@ -49,13 +50,13 @@ def get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr =False
 
         }
     '''
-
+    #parametri per la data
     tbs_param = []
 
     if time_period:
         tbs_param.append('cdr:1,'+time_mapping)
 
-
+    #sort per la data
     if sort_by_date:
         tbs_param.append('sbd:1')
         params['tbs'] = ','.join(tbs_param)
@@ -73,6 +74,8 @@ def get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr =False
     bare_url = u"https://www.google.com/search?" if https else u"http://www.google.com/search?"
     url = bare_url + params
 
+    #scelta di quale google scegliere
+    # to do -> possibilità do aggiunta di più paesi
     if not ncr:
 
         if area == 'com':
@@ -85,8 +88,10 @@ def get_search_url(query, page=0, per_page=10, lang='en', area='com', ncr =False
         url += params
     return url
 
-
+#accedo url
 def get_html(url):
+    '''Return html'''
+
     ua = UserAgent()
     header = ua.random
 
@@ -109,18 +114,20 @@ def get_html(url):
         print(e)
         return None
 
+#estraggo il titolo
 def _get_title(li):
     """Return il nome del della pagina."""
 
     a = li.find('span')
-    #a = li.find('a')
 
     if a is not None:
         return a.text.strip()
     return None
 
+#estraggo il link
 def _get_link(li):
     """Return il link"""
+
     try:
         a = li.find("a")
         link = a["href"]
@@ -130,6 +137,7 @@ def _get_link(li):
 
     return link
 
+#estraggo la descrizione
 def _get_description(li):
     """Return la descrizione """
 
@@ -143,7 +151,9 @@ def _get_description(li):
     else:
         return None
 
+#estraggo il testo
 def _get_text(link):
+    '''Return Text '''
     str = ''
     try:
         #soup = BeautifulSoup(urllib.request.urlopen(link).read(),features="lxml")
@@ -154,7 +164,6 @@ def _get_text(link):
         soup = BeautifulSoup(urllib.request.urlopen(request).read(),features="html.parser")
         divs =soup.find_all("p")
         for div in divs:
-            #print(div)
             #SUPPOSIZIONE -> le righe con meno di 50 caratteri non contengono nulla
             if len(div.text.strip()) > 50:
                 str= str + div.text.strip()
@@ -162,39 +171,40 @@ def _get_text(link):
     except:
         return ' '
 
-
-def search(query,pages=1, lang='en', area='com', ncr=False, void=True, time_period=True, sort_by_date=True, first_page=0):
+#
+def search(query,start_date,end_date,pages=1, lang='en', area='com', ncr=False, void=True, time_period=True, sort_by_date=True, first_page=0):
     """
     query = keyword
     pages = numero di pagine da analizzare
     lang = area di google dove cercare es .com .it
 
+    Return Class TEXT
     """
     results = []
     for i in range(first_page + first_page+pages):
-        url = get_search_url (query, i,lang=lang, area=area, ncr=ncr, time_period=time_period, sort_by_date=sort_by_date)
-        #print(url)
+
+        url = get_search_url (query,start_date,end_date, i,lang=lang, area=area, ncr=ncr, time_period=time_period, sort_by_date=sort_by_date)
+
+        print("Cerco nella pagina -> ",url)
+
         html = get_html(url)
 
         if html:
+
             soup = BeautifulSoup(html, "html.parser")
             divs = soup.findAll("div", attrs={"class": "g"})
-
-
 
             for li in divs:
 
                 title = _get_title(li)
-
                 link = _get_link(li)
-
                 description = _get_description(li)
-
                 text = _get_text(link)
 
                 if void is True:
                     if description is None:
                         continue
+
                 # aggiungo i file trovati in un lista TEXT
                 results.append(Text(title,link,description,text))
 
